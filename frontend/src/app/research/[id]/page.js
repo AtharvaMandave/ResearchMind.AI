@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import styles from "./page.module.css";
 
-const BACKEND_URL = "http://127.0.0.1:8000";
-const WS_URL = "ws://127.0.0.1:8000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const WS_URL = BACKEND_URL.replace(/^http/, "ws");
 
 // --- Beautiful SVG Icon Components ---
 const ArrowLeftIcon = () => (
@@ -616,7 +616,7 @@ export default function ResearchDashboard() {
                 </span>
               </div>
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "normal", marginTop: "6px" }}>
-                Port: ws://127.0.0.1:8000
+                URL: {WS_URL}
               </div>
               {wsError && (
                 <div style={{ fontSize: "0.8rem", color: "var(--danger)", fontWeight: "normal", marginTop: "4px" }}>
