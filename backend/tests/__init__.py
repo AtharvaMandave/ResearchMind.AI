@@ -1,0 +1,3 @@
+"""
+ResearchMind AI – Tests Package
+"""

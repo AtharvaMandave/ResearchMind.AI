@@ -1,0 +1,44 @@
+services:
+  # ────────────────────────────────────────────────────────────────
+  #  PostgreSQL 16 with pgvector extension pre-installed
+  # ────────────────────────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16        # official pgvector image
+    container_name: researchmind_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-researchmind}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-researchmind_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-researchmind_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-researchmind} -d ${POSTGRES_DB:-researchmind_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ────────────────────────────────────────────────────────────────
+  #  pgAdmin 4 – Browser-based database management (optional)
+  # ────────────────────────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: researchmind_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@researchmind.ai
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools                            # only starts with: docker compose --profile tools up
+
+volumes:
+  postgres_data:
+    driver: local

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Test</title>
+    <style>
+        body { font-family: sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; }
+        .log { background: #1e293b; border: 1px solid #334155; padding: 20px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; margin-top: 20px; height: 300px; overflow-y: auto; }
+        .success { color: #34d399; }
+        .error { color: #f87171; }
+        input { background: #1e293b; border: 1px solid #475569; color: white; padding: 8px 12px; border-radius: 6px; width: 300px; font-size: 0.95rem; }
+        button { background: #6366f1; border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: bold; }
+        button:hover { background: #818cf8; }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Connectivity Test</h1>
+    <div style="margin-bottom: 20px;">
+        <label for="projectId">Project ID/UUID: </label>
+        <input type="text" id="projectId" value="browser-test" />
+        <button onclick="testConnection()">Run Test</button>
+    </div>
+    <div class="log" id="log">Enter a Project ID above and click "Run Test"...</div>
+
+    <script>
+        function logMsg(msg, isSuccess, isError) {
+            const logEl = document.getElementById("log");
+            let cls = "";
+            if (isSuccess) cls = "class='success'";
+            if (isError) cls = "class='error'";
+            logEl.innerHTML += `<div ${cls}>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function testConnection() {
+            const logEl = document.getElementById("log");
+            logEl.innerHTML = "";
+            const id = document.getElementById("projectId").value.trim();
+            const uri = `ws://127.0.0.1:8000/api/v1/ws/${id}`;
+            logMsg(`Initiating WebSocket connection to: ${uri}...`);
+
+            try {
+                const ws = new WebSocket(uri);
+
+                ws.onopen = () => {
+                    logMsg("Connection successfully opened!", true);
+                    logMsg("Sending 'ping' message...");
+                    ws.send("ping");
+                };
+
+                ws.onmessage = (event) => {
+                    logMsg(`Received message from server: "${event.data}"`, true);
+                    logMsg("Test completed successfully!", true);
+                    ws.close();
+                };
+
+                ws.onclose = (event) => {
+                    logMsg(`Connection closed (code: ${event.code}, clean: ${event.wasClean})`);
+                };
+
+                ws.onerror = (error) => {
+                    logMsg(`WebSocket Error encountered. Check browser DevTools console (F12) for detailed security/CORS warnings.`, false, true);
+                    console.error("Detailed WS Error:", error);
+                };
+            } catch (err) {
+                logMsg(`Failed to instantiate WebSocket: ${err.message}`, false, true);
+            }
+        }
+    </script>
+</body>
+</html>
